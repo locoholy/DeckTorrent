@@ -1,0 +1,11 @@
+{
+  "name": "TransmissionMonitor",
+  "author": "opencode",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["Utility", "Downloads"],
+    "description": "Прогресс, скорости и управление торрентами Transmission прямо в игровом режиме Steam Deck",
+    "image": ""
+  }
+}

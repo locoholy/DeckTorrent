@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Transmission (фон)
+Comment=Фоновая загрузка + веб localhost:9091
+Exec=/home/deck/Documents/DeckTorrent/scripts/transmission-daemon.sh
+Icon=com.transmissionbt.Transmission
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Transmission (окно)
+Comment=Графический интерфейс Transmission
+Exec=/home/deck/Documents/DeckTorrent/scripts/transmission-gui.sh
+Icon=com.transmissionbt.Transmission
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;
