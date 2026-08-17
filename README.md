@@ -57,8 +57,7 @@ update-desktop-database ~/.local/share/applications
 
 # 3. плагин (каталог принадлежит root)
 cd plugin && npm install && npm run build && cd ..
-sudo cp -r plugin ~/homebrew/plugins/TransmissionMonitor
-sudo systemctl restart plugin_loader
+sudo scripts/deploy.sh
 ```
 
 ---
