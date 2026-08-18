@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Transmission (окно)
-Comment=Графический интерфейс Transmission
+Name=Transmission (управление)
+Comment=Веб-интерфейс фонового демона — закачки переживают переход в игровой режим
 Exec=/home/deck/Documents/DeckTorrent/scripts/transmission-gui.sh
 Icon=com.transmissionbt.Transmission
 Terminal=false
