@@ -10,10 +10,18 @@ TIMEOUT = 5
 
 FIELDS = [
     "id", "name", "status", "percentDone", "rateDownload", "rateUpload",
-    "eta", "totalSize", "downloadedEver", "uploadedEver",
+    "eta", "totalSize", "sizeWhenDone", "downloadedEver", "uploadedEver",
     "peersConnected", "peersSendingToUs", "peersGettingFromUs",
+    "recheckProgress", "metadataPercentComplete", "uploadRatio",
     "isFinished", "error", "errorString",
 ]
+
+_METHODS = {
+    "start": "torrent-start",
+    "stop": "torrent-stop",
+    "verify": "torrent-verify",
+    "reannounce": "torrent-reannounce",
+}
 
 # Transmission отдаёт 409 с новым токеном на первый запрос — это норма, а не сбой.
 _session_id = ""
@@ -60,24 +68,40 @@ def _shape(raw: dict) -> dict:
     torrents = []
     down_total = 0
     up_total = 0
+    have_total = 0
+    want_total = 0
     for t in raw.get("torrents", []):
         down = t.get("rateDownload", 0)
         up = t.get("rateUpload", 0)
         down_total += down
         up_total += up
+        percent = t.get("percentDone", 0)
+        # sizeWhenDone — это то, что реально качается (без снятых галок в файлах),
+        # именно от него Transmission считает percentDone. totalSize врал бы на
+        # раздачах с исключёнными файлами.
+        want = t.get("sizeWhenDone", 0) or t.get("totalSize", 0)
+        have = int(want * percent)
+        have_total += have
+        want_total += want
         torrents.append({
             "id": t.get("id"),
             "name": t.get("name", "?"),
             "status": t.get("status", 0),
-            "percent": round(t.get("percentDone", 0) * 100, 1),
+            "percent": round(percent * 100, 1),
+            "checkPercent": round(t.get("recheckProgress", 0) * 100, 1),
+            "metaPercent": round(t.get("metadataPercentComplete", 1) * 100, 1),
             "downSpeed": down,
             "upSpeed": up,
             "eta": t.get("eta", -1),
             "totalSize": t.get("totalSize", 0),
+            "wantedSize": want,
+            "haveSize": have,
             "downloaded": t.get("downloadedEver", 0),
             "uploaded": t.get("uploadedEver", 0),
+            "ratio": round(max(t.get("uploadRatio", 0), 0), 2),
             "peers": t.get("peersConnected", 0),
             "peersFrom": t.get("peersSendingToUs", 0),
+            "peersTo": t.get("peersGettingFromUs", 0),
             "finished": t.get("isFinished", False),
             "error": t.get("errorString", "") or "",
         })
@@ -88,6 +112,9 @@ def _shape(raw: dict) -> dict:
         "torrents": torrents,
         "downTotal": down_total,
         "upTotal": up_total,
+        "haveTotal": have_total,
+        "wantTotal": want_total,
+        "activeCount": sum(1 for t in torrents if t["status"] in (4, 6)),
     }
 
 
@@ -96,17 +123,17 @@ class Plugin:
         self.loop = asyncio.get_event_loop()
         self._seen_done: set[int] = set()
         self._primed = False
-        decky.logger.info("Transmission Monitor запущен")
+        decky.logger.info("DeckTorrent запущен")
         self._watcher = self.loop.create_task(self._watch())
 
     async def _unload(self):
         watcher = getattr(self, "_watcher", None)
         if watcher:
             watcher.cancel()
-        decky.logger.info("Transmission Monitor выгружен")
+        decky.logger.info("DeckTorrent выгружен")
 
     async def _uninstall(self):
-        decky.logger.info("Transmission Monitor удалён")
+        decky.logger.info("DeckTorrent удалён")
 
     async def get_snapshot(self) -> dict:
         """Дёргается фронтендом раз в 2 с, пока панель открыта."""
@@ -119,12 +146,26 @@ class Plugin:
         return _shape(args)
 
     async def set_torrent(self, torrent_id: int, action: str) -> dict:
-        method = "torrent-start" if action == "start" else "torrent-stop"
+        method = _METHODS.get(action)
+        if method is None:
+            return {"ok": False, "error": "bad_action"}
         res = await _rpc(method, {"ids": [torrent_id]})
         return {"ok": res["ok"], "error": res.get("error", "")}
 
+    async def remove_torrent(self, torrent_id: int, delete_data: bool) -> dict:
+        """delete_data=True стирает скачанное с диска — необратимо, фронт спрашивает подтверждение."""
+        res = await _rpc("torrent-remove", {
+            "ids": [torrent_id],
+            "delete-local-data": bool(delete_data),
+        })
+        if res["ok"]:
+            self._seen_done.discard(torrent_id)
+        return {"ok": res["ok"], "error": res.get("error", "")}
+
     async def set_all(self, action: str) -> dict:
-        method = "torrent-start" if action == "start" else "torrent-stop"
+        method = _METHODS.get(action)
+        if method is None:
+            return {"ok": False, "error": "bad_action"}
         res = await _rpc(method, {})
         return {"ok": res["ok"], "error": res.get("error", "")}
 

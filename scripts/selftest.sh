@@ -40,16 +40,16 @@ echo
 echo "=== 3. Торренты и магниты идут в демон ==="
 for MIME in application/x-bittorrent x-scheme-handler/magnet; do
     D=$(xdg-mime query default "$MIME" 2>/dev/null)
-    if [ "$D" = "transmission-daemon-add.desktop" ]; then
+    if [ "$D" = "decktorrent-add.desktop" ]; then
         ok "$MIME → демон"
     else
-        bad "$MIME → $D (ожидался transmission-daemon-add.desktop)"
+        bad "$MIME → $D (ожидался decktorrent-add.desktop)"
     fi
 done
 
 H=/home/deck/Documents/DeckTorrent/scripts/torrent-add.sh
 [ -x "$H" ] && ok "обработчик на месте и исполняем" || bad "нет обработчика: $H"
-EXEC=$(grep -m1 '^Exec=' /home/deck/.local/share/applications/transmission-daemon-add.desktop 2>/dev/null | cut -d= -f2-)
+EXEC=$(grep -m1 '^Exec=' /home/deck/.local/share/applications/decktorrent-add.desktop 2>/dev/null | cut -d= -f2-)
 case "$EXEC" in
     "$H"*) ok "ярлык указывает на актуальный путь" ;;
     *)     bad "ярлык ведёт не туда: $EXEC" ;;
@@ -57,7 +57,7 @@ esac
 
 echo
 echo "=== 4. Плагин Decky ==="
-P=/home/deck/homebrew/plugins/TransmissionMonitor
+P=/home/deck/homebrew/plugins/DeckTorrent
 if [ -d "$P" ]; then
     ok "установлен, версия $(grep -o '"version"[^,]*' $P/package.json 2>/dev/null | grep -o '[0-9.]*')"
     [ -f "$P/dist/index.js" ] && ok "фронтенд собран" || bad "нет dist/index.js — нужен npm run build"
@@ -66,10 +66,10 @@ else
     bad "плагин не установлен в ~/homebrew/plugins/"
 fi
 
-if journalctl -u plugin_loader --no-pager 2>/dev/null | grep -q "Loaded TransmissionMonitor"; then
-    ok "загрузчик подхватил плагин (есть 'Loaded TransmissionMonitor')"
+if journalctl -u plugin_loader --no-pager 2>/dev/null | grep -q "Loaded DeckTorrent"; then
+    ok "загрузчик подхватил плагин (есть 'Loaded DeckTorrent')"
 else
-    warn "в логе нет 'Loaded TransmissionMonitor' — перезапусти plugin_loader"
+    warn "в логе нет 'Loaded DeckTorrent' — перезапусти plugin_loader"
 fi
 
 echo

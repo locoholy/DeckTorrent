@@ -6,13 +6,20 @@
 
 | Что | Действие |
 |-----|----------|
-| **Фон** (Gaming Mode ок) | Ярлык «Transmission (фон)» или `./transmission-daemon.sh` |
-| **Окно** | Ярлык «Transmission (окно)» |
+| **Фон** (Gaming Mode ок) | Ярлык «DeckTorrent (фон)» или `./transmission-daemon.sh` |
+| **Веб в десктопе** | Ярлык «DeckTorrent» |
 | **Веб** | http://localhost:9091 (когда демон запущен) |
 | **Кинуть .torrent** | в `~/Torrents/` — подхватит сам |
 | **Загрузки** | `~/Downloads/` |
 
-Автозапуск демона: `systemctl --user enable --now transmission-daemon`
+Автозапуск демона включает установщик (`systemctl --user enable --now transmission-daemon`
+плюс `loginctl enable-linger` — без него сервис умирает вместе с сессией при
+переходе десктоп ⇄ игровой режим).
+
+## Установка
+
+Всё ставится одной командой — `~/Documents/DeckTorrent/install.sh`. Ниже описано,
+что именно она делает и как чинить руками, если что-то разъехалось.
 
 ## После обновления SteamOS
 
@@ -58,8 +65,8 @@ systemctl --user restart transmission-daemon
 Пока демон крутится — сон может тупить. Опционально поставь hook:
 
 ```bash
-sudo cp ~/Documents/DeckTorrent/scripts/transmission-sleep-hook.sh /etc/systemd/system-sleep/transmission.sh
-sudo chmod +x /etc/systemd/system-sleep/transmission.sh
+sudo install -m 755 ~/Documents/DeckTorrent/scripts/transmission-sleep-hook.sh \
+    /etc/systemd/system-sleep/transmission.sh
 ```
 
 ## Сервисы
@@ -82,11 +89,11 @@ journalctl -b | grep -c 'transmission-daemon.service: Scheduled restart'
 пауза/возобновить. Переписан под актуальный API (`@decky/api` + `@decky/ui`),
 собирается через rollup. Подробности — в `plugin/README.md`.
 
-Пока **не** установлен: `~/homebrew/plugins/` принадлежит root, нужно вручную:
+Ставится установщиком; переустановить только плагин после правок:
 
 ```bash
-sudo cp -r ~/Documents/DeckTorrent/plugin ~/homebrew/plugins/TransmissionMonitor
-sudo systemctl restart plugin_loader
+cd ~/Documents/DeckTorrent/plugin && npm run build
+sudo ~/Documents/DeckTorrent/scripts/deploy.sh
 ```
 
 Плагину нужен запущенный демон — он читает его по RPC на порту 9091.

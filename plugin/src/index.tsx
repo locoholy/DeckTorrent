@@ -1,146 +1,56 @@
-import { addEventListener, callable, definePlugin, removeEventListener, toaster } from "@decky/api";
-import {
-  ButtonItem,
-  Field,
-  PanelSection,
-  PanelSectionRow,
-  ProgressBarWithInfo,
-  staticClasses,
-} from "@decky/ui";
-import { useEffect, useRef, useState } from "react";
-import { FaDownload } from "react-icons/fa";
+import { addEventListener, definePlugin, removeEventListener, toaster } from "@decky/api";
+import { DialogButton, Field, Focusable, PanelSection, PanelSectionRow, staticClasses } from "@decky/ui";
+import { useEffect, useState } from "react";
+import { FaDownload, FaPause, FaPlay, FaSyncAlt } from "react-icons/fa";
 
-const POLL_MS = 2000;
+import { Card, Keyframes, SummaryHeader, TorrentCard } from "./components";
+import { COLORS, humanSpeed, isRunning } from "./format";
+import { L } from "./i18n";
+import { setAll, store, type Snapshot } from "./store";
 
-interface Torrent {
-  id: number;
-  name: string;
-  status: number;
-  percent: number;
-  downSpeed: number;
-  upSpeed: number;
-  eta: number;
-  totalSize: number;
-  downloaded: number;
-  uploaded: number;
-  peers: number;
-  peersFrom: number;
-  finished: boolean;
-  error: string;
+/** Все компоненты панели читают один и тот же снимок из общего стора. */
+function useSnapshot(): Snapshot | null {
+  const [, force] = useState(0);
+  useEffect(() => store.subscribe(() => force((n) => n + 1)), []);
+  return store.snap;
 }
 
-interface Snapshot {
-  ok: boolean;
-  error?: string;
-  torrents?: Torrent[];
-  downTotal?: number;
-  upTotal?: number;
-}
-
-const getSnapshot = callable<[], Snapshot>("get_snapshot");
-const setTorrent = callable<[torrent_id: number, action: string], { ok: boolean }>("set_torrent");
-const setAll = callable<[action: string], { ok: boolean }>("set_all");
-
-function humanSize(bytes: number): string {
-  if (bytes <= 0) return "0 Б";
-  const units = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  const value = bytes / Math.pow(1024, i);
-  return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
-
-function humanSpeed(bytesPerSec: number): string {
-  return bytesPerSec > 0 ? `${humanSize(bytesPerSec)}/с` : "—";
-}
-
-function humanEta(seconds: number): string {
-  if (seconds < 0) return "—";
-  if (seconds < 60) return `${seconds} с`;
-  const m = Math.floor(seconds / 60);
-  if (m < 60) return `${m} мин`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} ч ${m % 60} мин`;
-  return `${Math.floor(h / 24)} д ${h % 24} ч`;
-}
-
-// Коды состояний Transmission (см. RPC-спеку, поле status).
-function statusLabel(t: Torrent): string {
-  if (t.error) return "Ошибка";
-  switch (t.status) {
-    case 0: return "Остановлен";
-    case 1: return "В очереди на проверку";
-    case 2: return "Проверка";
-    case 3: return "В очереди";
-    case 4: return "Качается";
-    case 5: return "В очереди на раздачу";
-    case 6: return "Раздаётся";
-    default: return "—";
-  }
-}
-
-const isRunning = (t: Torrent) => t.status !== 0;
-
-function TorrentRow({ torrent, onToggle }: { torrent: Torrent; onToggle: (t: Torrent) => void }) {
-  const running = isRunning(torrent);
-  const parts = [statusLabel(torrent)];
-  if (torrent.downSpeed > 0) parts.push(`↓ ${humanSpeed(torrent.downSpeed)}`);
-  if (torrent.upSpeed > 0) parts.push(`↑ ${humanSpeed(torrent.upSpeed)}`);
-  if (torrent.status === 4 && torrent.eta >= 0) parts.push(humanEta(torrent.eta));
-  if (torrent.peers > 0) parts.push(`${torrent.peersFrom}/${torrent.peers} пиров`);
-
+function Skeleton() {
   return (
-    <>
-      <PanelSectionRow>
-        <ProgressBarWithInfo
-          label={torrent.name}
-          description={torrent.error || parts.join(" · ")}
-          nProgress={torrent.percent}
-          sOperationText={`${torrent.percent}%`}
-          sTimeRemaining={humanSize(torrent.totalSize)}
-          bottomSeparator="none"
+    <Card>
+      {[70, 100, 45].map((w, i) => (
+        <div
+          key={i}
+          style={{
+            height: i === 0 ? "14px" : "8px",
+            width: `${w}%`,
+            borderRadius: "4px",
+            background: COLORS.track,
+            animation: "dtPulse 1.4s ease-in-out infinite",
+          }}
         />
-      </PanelSectionRow>
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => onToggle(torrent)}>
-          {running ? "Пауза" : "Возобновить"}
-        </ButtonItem>
-      </PanelSectionRow>
-    </>
+      ))}
+    </Card>
+  );
+}
+
+function Notice({ title, text }: { title: string; text: string }) {
+  return (
+    <PanelSectionRow>
+      <Field label={title} description={text} bottomSeparator="none" />
+    </PanelSectionRow>
   );
 }
 
 function Content() {
-  const [snap, setSnap] = useState<Snapshot | null>(null);
-  const busy = useRef(false);
-
-  const refresh = async () => {
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      setSnap(await getSnapshot());
-    } catch (e) {
-      setSnap({ ok: false, error: "rpc_failed" });
-    } finally {
-      busy.current = false;
-    }
-  };
-
-  useEffect(() => {
-    refresh();
-    const id = window.setInterval(refresh, POLL_MS);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const toggle = async (t: Torrent) => {
-    await setTorrent(t.id, isRunning(t) ? "stop" : "start");
-    refresh();
-  };
+  const snap = useSnapshot();
 
   if (!snap) {
     return (
-      <PanelSection title="Transmission" spinner>
+      <PanelSection>
+        <Keyframes />
         <PanelSectionRow>
-          <Field label="Подключаюсь…" bottomSeparator="none" />
+          <Skeleton />
         </PanelSectionRow>
       </PanelSection>
     );
@@ -149,17 +59,14 @@ function Content() {
   if (!snap.ok) {
     const noDaemon = snap.error === "no_daemon";
     return (
-      <PanelSection title="Transmission">
+      <PanelSection>
+        <Keyframes />
+        <Notice
+          title={noDaemon ? L.noDaemonTitle : L.rpcFailTitle}
+          text={noDaemon ? L.noDaemonText : L.rpcFailText}
+        />
         <PanelSectionRow>
-          <Field
-            label={noDaemon ? "Демон не запущен" : "Нет ответа от Transmission"}
-            description={
-              noDaemon
-                ? "Запустите ярлык «Transmission (фон)» в десктопе. Если открыта оконная версия — закройте её, она отключает RPC."
-                : "Демон отвечает с ошибкой. Проверьте: systemctl --user status transmission-daemon"
-            }
-            bottomSeparator="none"
-          />
+          <DialogButton onClick={() => store.refresh()}>{L.retry}</DialogButton>
         </PanelSectionRow>
       </PanelSection>
     );
@@ -169,14 +76,12 @@ function Content() {
 
   if (torrents.length === 0) {
     return (
-      <PanelSection title="Transmission">
-        <PanelSectionRow>
-          <Field
-            label="Торрентов нет"
-            description="Откройте .torrent или magnet-ссылку в десктопе — закачка появится здесь и продолжится в игровом режиме."
-            bottomSeparator="none"
-          />
-        </PanelSectionRow>
+      <PanelSection>
+        <Keyframes />
+        <Notice
+          title={L.emptyTitle}
+          text={L.emptyText}
+        />
       </PanelSection>
     );
   }
@@ -184,43 +89,85 @@ function Content() {
   const anyRunning = torrents.some(isRunning);
 
   return (
-    <PanelSection title="Transmission">
-      <PanelSectionRow>
-        <Field
-          label="Всего"
-          description={`↓ ${humanSpeed(snap.downTotal ?? 0)}   ↑ ${humanSpeed(snap.upTotal ?? 0)}`}
-          bottomSeparator="thick"
-        />
-      </PanelSectionRow>
+    <PanelSection>
+      <Keyframes />
+
+      {/* При одной закачке шапка дублировала бы карточку — показываем её только для списка */}
+      {torrents.length > 1 && (
+        <PanelSectionRow>
+          <SummaryHeader snap={snap} />
+        </PanelSectionRow>
+      )}
 
       {torrents.map((t) => (
-        <TorrentRow key={t.id} torrent={t} onToggle={toggle} />
+        <PanelSectionRow key={t.id}>
+          <TorrentCard torrent={t} />
+        </PanelSectionRow>
       ))}
 
       <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={async () => {
-            await setAll(anyRunning ? "stop" : "start");
-            refresh();
-          }}
-        >
-          {anyRunning ? "Остановить все" : "Запустить все"}
-        </ButtonItem>
+        <Focusable style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
+          <DialogButton
+            style={{ flex: 1, minWidth: 0, padding: "9px", fontSize: "13px" }}
+            onClick={async () => {
+              await setAll(anyRunning ? "stop" : "start");
+              store.refresh();
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
+              {anyRunning ? <FaPause size={12} /> : <FaPlay size={12} />}
+              {anyRunning ? L.pauseAll : L.startAll}
+            </span>
+          </DialogButton>
+          <DialogButton
+            style={{ flex: 1, minWidth: 0, padding: "9px", fontSize: "13px" }}
+            onClick={() => store.refresh()}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
+              <FaSyncAlt size={12} />
+              {L.refresh}
+            </span>
+          </DialogButton>
+        </Focusable>
       </PanelSectionRow>
     </PanelSection>
   );
 }
 
+/** Скорость прямо в шапке панели — видно, не разворачивая список. */
+function TitleView() {
+  const snap = useSnapshot();
+  const down = snap?.ok ? snap.downTotal ?? 0 : 0;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+      <div className={staticClasses.Title}>DeckTorrent</div>
+      {down > 0 && (
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            color: COLORS.down,
+            fontVariantNumeric: "tabular-nums",
+            paddingRight: "4px",
+          }}
+        >
+          ↓ {humanSpeed(down)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default definePlugin(() => {
   const onDone = (name: string) => {
-    toaster.toast({ title: "Загрузка завершена", body: name });
+    toaster.toast({ title: L.doneToast, body: name });
   };
   addEventListener<[name: string]>("transmission_done", onDone);
 
   return {
-    name: "Transmission Monitor",
-    titleView: <div className={staticClasses.Title}>Transmission</div>,
+    name: "DeckTorrent",
+    titleView: <TitleView />,
     content: <Content />,
     icon: <FaDownload />,
     onDismount() {

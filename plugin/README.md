@@ -1,4 +1,4 @@
-# Transmission Monitor
+# DeckTorrent
 
 Плагин Decky: торренты Transmission в игровом режиме Steam Deck — прогресс,
 скорости, ETA, пиры и кнопки пауза/возобновить, без выхода в десктоп.
@@ -36,13 +36,13 @@ npx tsc --noEmit   # строгая проверка типов
 Папка `~/homebrew/plugins/` принадлежит root, поэтому:
 
 ```bash
-sudo cp -r ~/Documents/DeckTorrent/plugin ~/homebrew/plugins/TransmissionMonitor
+sudo cp -r ~/Documents/DeckTorrent/plugin ~/homebrew/plugins/DeckTorrent
 sudo systemctl restart plugin_loader
 ```
 
-Имя папки должно совпадать с `name` из `plugin.json` — `TransmissionMonitor`.
+Имя папки должно совпадать с `name` из `plugin.json` — `DeckTorrent`.
 
-Логи плагина: `~/homebrew/logs/TransmissionMonitor/`.
+Логи плагина: `~/homebrew/logs/DeckTorrent/`.
 
 ## Состояния, которые показывает панель
 

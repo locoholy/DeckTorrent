@@ -1,11 +1,15 @@
 {
-  "name": "TransmissionMonitor",
+  "name": "DeckTorrent",
   "author": "opencode",
   "flags": [],
   "api_version": 1,
   "publish": {
-    "tags": ["Utility", "Downloads"],
-    "description": "Прогресс, скорости и управление торрентами Transmission прямо в игровом режиме Steam Deck",
+    "tags": [
+      "Utility",
+      "Downloads",
+      "Torrent"
+    ],
+    "description": "Torrent downloads on your Steam Deck: big progress numbers, time left, pause and delete — right in Game Mode. Backed by a Transmission daemon that keeps downloading while you play.",
     "image": ""
   }
 }

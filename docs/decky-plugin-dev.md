@@ -42,7 +42,7 @@
 
 ```json
 {
-  "name": "TransmissionMonitor",
+  "name": "DeckTorrent",
   "author": "opencode",
   "flags": [],
   "api_version": 1,
@@ -166,8 +166,8 @@ npx tsc --noEmit        # строгая проверка типов, ошибк
 Установка на устройство (каталог принадлежит root):
 
 ```bash
-sudo rm -rf ~/homebrew/plugins/TransmissionMonitor
-sudo cp -r ~/Documents/DeckTorrent/plugin ~/homebrew/plugins/TransmissionMonitor
+sudo rm -rf ~/homebrew/plugins/DeckTorrent
+sudo cp -r ~/Documents/DeckTorrent/plugin ~/homebrew/plugins/DeckTorrent
 sudo systemctl restart plugin_loader
 ```
 

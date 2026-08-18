@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="404" viewBox="0 0 380 404" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a9fffcc"/><stop offset="100%" stop-color="#1a9fff"/>
+    </linearGradient>
+    <linearGradient id="barG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5ba32bcc"/><stop offset="100%" stop-color="#5ba32b"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#232c38"/><stop offset="100%" stop-color="#171d25"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="380" height="404" rx="12" fill="url(#panel)"/>
+
+  <!-- заголовок панели -->
+  <text x="20" y="34" fill="#ffffff" font-size="16" font-weight="700">DeckTorrent</text>
+  <text x="360" y="34" fill="#1a9fff" font-size="13" font-weight="600" text-anchor="end">↓ 3.1 МБ/с</text>
+
+  <!-- карточка: активная загрузка -->
+  <rect x="16" y="50" width="348" height="118" rx="6" fill="#00000047"/>
+  <rect x="16" y="50" width="3" height="118" rx="1.5" fill="#1a9fff"/>
+  <text x="32" y="72" fill="#ffffff94" font-size="12">Batman Arkham Knight.(v.1.999).(2015) [Dece…</text>
+  <text x="32" y="112" fill="#1a9fff" font-size="30" font-weight="800">42.7%</text>
+  <rect x="130" y="88" width="218" height="10" rx="5" fill="#ffffff21"/>
+  <rect x="130" y="88" width="93" height="10" rx="5" fill="url(#bar)"/>
+  <text x="130" y="119" fill="#ffffff" font-size="13" font-weight="600">Осталось 1 ч 38 мин</text>
+  <text x="32" y="150" fill="#ffffff94" font-size="12">Скачано 19.2 ГБ из 45.0 ГБ</text>
+  <text x="348" y="150" fill="#ffffff94" font-size="12" text-anchor="end">ещё 25.8 ГБ</text>
+
+  <!-- карточка: пауза -->
+  <rect x="16" y="176" width="348" height="104" rx="6" fill="#00000047"/>
+  <rect x="16" y="176" width="3" height="104" rx="1.5" fill="#7a8894"/>
+  <text x="32" y="198" fill="#ffffff94" font-size="12">Cyberpunk 2077 (v2.2) [FitGirl] RePack</text>
+  <text x="32" y="236" fill="#7a8894" font-size="30" font-weight="800">18.0%</text>
+  <rect x="130" y="214" width="218" height="10" rx="5" fill="#ffffff21"/>
+  <rect x="130" y="214" width="39" height="10" rx="5" fill="#7a8894"/>
+  <text x="130" y="245" fill="#7a8894" font-size="13" font-weight="600">На паузе</text>
+  <text x="32" y="268" fill="#ffffff94" font-size="12">Скачано 1.8 ГБ из 10.0 ГБ</text>
+
+  <!-- карточка: готово -->
+  <rect x="16" y="288" width="348" height="104" rx="6" fill="#00000047"/>
+  <rect x="16" y="288" width="3" height="104" rx="1.5" fill="#5ba32b"/>
+  <text x="32" y="310" fill="#ffffff94" font-size="12">Elden Ring — Shadow of the Erdtree</text>
+  <text x="32" y="348" fill="#5ba32b" font-size="30" font-weight="800">100%</text>
+  <rect x="130" y="326" width="218" height="10" rx="5" fill="#ffffff21"/>
+  <rect x="130" y="326" width="218" height="10" rx="5" fill="url(#barG)"/>
+  <text x="130" y="357" fill="#5ba32b" font-size="13" font-weight="600">Скачано</text>
+  <text x="32" y="380" fill="#ffffff94" font-size="12">Скачано 62.0 ГБ из 62.0 ГБ</text>
+</svg>

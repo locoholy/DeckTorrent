@@ -1,7 +1,7 @@
 {
-  "name": "TransmissionMonitor",
-  "version": "2.0.0",
-  "description": "Мониторинг торрентов Transmission прямо в игровом режиме",
+  "name": "DeckTorrent",
+  "version": "2.1.0",
+  "description": "Torrent progress and control in Steam Deck Game Mode",
   "type": "module",
   "scripts": {
     "build": "shx rm -rf dist && rollup -c"

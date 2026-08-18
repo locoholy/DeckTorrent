@@ -7,12 +7,14 @@
 
 set -e
 SRC=/home/deck/Documents/DeckTorrent/plugin
-DST=/home/deck/homebrew/plugins/TransmissionMonitor
+DST=/home/deck/homebrew/plugins/DeckTorrent
 
 [ "$(id -u)" -eq 0 ] || { echo "Нужен sudo: sudo $0"; exit 1; }
 [ -f "$SRC/dist/index.js" ] || { echo "Нет $SRC/dist/index.js — сначала npm run build"; exit 1; }
 
 echo "Устанавливаю из $SRC"
+# Плагин раньше звался TransmissionMonitor — иначе в меню останутся две копии.
+rm -rf /home/deck/homebrew/plugins/TransmissionMonitor
 rm -rf "$DST"
 mkdir -p "$DST"
 
@@ -27,7 +29,7 @@ echo "Перезапускаю загрузчик..."
 systemctl restart plugin_loader
 sleep 2
 
-if journalctl -u plugin_loader --no-pager --since "-1 min" | grep -q "Loaded TransmissionMonitor"; then
+if journalctl -u plugin_loader --no-pager --since "-1 min" | grep -q "Loaded DeckTorrent"; then
     echo "Готово: плагин загружен. Проверяй в игровом режиме, кнопка «⋯»."
 else
     echo "Плагин не подхватился — смотри: journalctl -u plugin_loader -n 50"
