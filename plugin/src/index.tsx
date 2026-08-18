@@ -173,7 +173,7 @@ function Content() {
         <PanelSectionRow>
           <Field
             label="Торрентов нет"
-            description="Положите .torrent в ~/Torrents — демон подхватит сам."
+            description="Откройте .torrent или magnet-ссылку в десктопе — закачка появится здесь и продолжится в игровом режиме."
             bottomSeparator="none"
           />
         </PanelSectionRow>
