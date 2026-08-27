@@ -24,7 +24,7 @@ big numbers instead of small print.
 ## Install — one command
 
 ```bash
-git clone https://github.com/<you>/DeckTorrent ~/Documents/DeckTorrent
+git clone https://github.com/locoholy/DeckTorrent ~/Documents/DeckTorrent
 ~/Documents/DeckTorrent/install.sh
 ```
 

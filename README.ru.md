@@ -24,7 +24,7 @@
 ## Установка — одна команда
 
 ```bash
-git clone https://github.com/<вы>/DeckTorrent ~/Documents/DeckTorrent
+git clone https://github.com/locoholy/DeckTorrent ~/Documents/DeckTorrent
 ~/Documents/DeckTorrent/install.sh
 ```
 
