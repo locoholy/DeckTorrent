@@ -41,7 +41,6 @@ export const removeTorrent =
   callable<[torrent_id: number, delete_data: boolean], { ok: boolean }>("remove_torrent");
 
 const POLL_MS = 2000;
-export const HISTORY_LEN = 40; // 40 точек × 2 с ≈ полторы минуты графика
 
 type Listener = () => void;
 
@@ -49,8 +48,6 @@ type Listener = () => void;
  *  Раньше каждый компонент дёргал RPC сам — это лишний трафик и рассинхрон цифр. */
 class Store {
   snap: Snapshot | null = null;
-  downHistory: number[] = [];
-  upHistory: number[] = [];
 
   private listeners = new Set<Listener>();
   private timer: number | undefined;
@@ -75,23 +72,13 @@ class Store {
     if (this.inflight) return;
     this.inflight = true;
     try {
-      const snap = await getSnapshot();
-      this.snap = snap;
-      if (snap.ok) {
-        this.push(this.downHistory, snap.downTotal ?? 0);
-        this.push(this.upHistory, snap.upTotal ?? 0);
-      }
+      this.snap = await getSnapshot();
     } catch {
       this.snap = { ok: false, error: "rpc_failed" };
     } finally {
       this.inflight = false;
       this.listeners.forEach((fn) => fn());
     }
-  }
-
-  private push(arr: number[], value: number) {
-    arr.push(value);
-    if (arr.length > HISTORY_LEN) arr.splice(0, arr.length - HISTORY_LEN);
   }
 }
 

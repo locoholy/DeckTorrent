@@ -290,14 +290,11 @@ const setTorrent = callable("set_torrent");
 const setAll = callable("set_all");
 const removeTorrent = callable("remove_torrent");
 const POLL_MS = 2000;
-const HISTORY_LEN = 40; // 40 точек × 2 с ≈ полторы минуты графика
 /** Один опрос на всю панель: и заголовок, и список читают из общего снимка.
  *  Раньше каждый компонент дёргал RPC сам — это лишний трафик и рассинхрон цифр. */
 class Store {
     constructor() {
         this.snap = null;
-        this.downHistory = [];
-        this.upHistory = [];
         this.listeners = new Set();
         this.inflight = false;
     }
@@ -320,12 +317,7 @@ class Store {
             return;
         this.inflight = true;
         try {
-            const snap = await getSnapshot();
-            this.snap = snap;
-            if (snap.ok) {
-                this.push(this.downHistory, snap.downTotal ?? 0);
-                this.push(this.upHistory, snap.upTotal ?? 0);
-            }
+            this.snap = await getSnapshot();
         }
         catch {
             this.snap = { ok: false, error: "rpc_failed" };
@@ -334,11 +326,6 @@ class Store {
             this.inflight = false;
             this.listeners.forEach((fn) => fn());
         }
-    }
-    push(arr, value) {
-        arr.push(value);
-        if (arr.length > HISTORY_LEN)
-            arr.splice(0, arr.length - HISTORY_LEN);
     }
 }
 const store = new Store();

@@ -5,7 +5,15 @@
 
 ## [Не выпущено] / [Unreleased]
 
+### Изменено / Changed
+- Фоновый сторож в плагине растягивает опрос с 15 с до 60 с, когда качать нечего:
+  список пуст, всё скачано или стоит на паузе, а демон не отвечает — тем более.
+  *The background watcher backs off from 15 s to 60 s while nothing can finish.*
+
 ### Удалено / Removed
+- Из стора убрана история скоростей (`downHistory`/`upHistory`): её копили каждые
+  2 с, но график так и не появился — ни один компонент её не читал.
+  *Dropped the unused speed history that was collected for a chart that never shipped.*
 - Деинсталлятор забирает с собой каталоги логов Decky, включая оставшийся от
   прежнего имени `TransmissionMonitor`.
   *The uninstaller now removes the plugin log directories too.*

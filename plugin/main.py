@@ -23,6 +23,15 @@ _METHODS = {
     "reannounce": "torrent-reannounce",
 }
 
+# Как часто фоновый сторож ходит в демон: пока что-то качается — часто, иначе редко.
+WATCH_ACTIVE = 15
+WATCH_IDLE = 60
+
+# Состояния, из которых торрент ещё может доехать до конца: очередь на проверку,
+# проверка, очередь на скачивание, скачивание. Всё остальное (стоит, раздаёт,
+# скачано) завершиться уже не может — ловить нечего.
+_LIVE_STATUSES = (1, 2, 3, 4)
+
 # Transmission отдаёт 409 с новым токеном на первый запрос — это норма, а не сбой.
 _session_id = ""
 
@@ -170,17 +179,29 @@ class Plugin:
         return {"ok": res["ok"], "error": res.get("error", "")}
 
     async def _watch(self):
-        """Фоновая проверка раз в 15 с — только чтобы поймать завершение загрузки.
+        """Фоновая проверка — только чтобы поймать завершение загрузки.
 
         Живые скорости фронт тянет сам; здесь редкий опрос, чтобы не жечь батарею,
-        когда панель закрыта.
+        когда панель закрыта. Когда качать нечего (список пуст, всё скачано или
+        стоит на паузе), интервал растягивается с 15 с до 60 с: завершиться в этот
+        момент всё равно нечему, а первый же тик после старта закачки вернёт частый
+        опрос.
         """
+        delay = WATCH_ACTIVE
         while True:
             try:
-                res = await _rpc("torrent-get", {"fields": ["id", "name", "isFinished", "percentDone"]})
+                res = await _rpc(
+                    "torrent-get",
+                    {"fields": ["id", "name", "status", "isFinished", "percentDone"]},
+                )
                 if res["ok"]:
                     args = res["data"].get("arguments") or {}
                     torrents = args.get("torrents", [])
+                    delay = (
+                        WATCH_ACTIVE
+                        if any(t.get("status") in _LIVE_STATUSES for t in torrents)
+                        else WATCH_IDLE
+                    )
                     done_now = {t["id"] for t in torrents if t.get("percentDone", 0) >= 1.0}
                     names = {t["id"]: t.get("name", "?") for t in torrents}
                     if not self._primed:
@@ -193,9 +214,12 @@ class Plugin:
                             await decky.emit("transmission_done", names.get(tid, "?"))
                         self._seen_done = done_now
                 else:
+                    # Демона нет — ловить тем более нечего.
                     self._primed = False
+                    delay = WATCH_IDLE
             except asyncio.CancelledError:
                 raise
             except Exception as e:
                 decky.logger.warning(f"Фоновая проверка сорвалась: {e}")
-            await asyncio.sleep(15)
+                delay = WATCH_IDLE
+            await asyncio.sleep(delay)
