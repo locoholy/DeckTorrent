@@ -4,134 +4,133 @@
 
 # DeckTorrent
 
-**Торренты на Steam Deck по-человечески.**
-Фоновый демон Transmission вместо десктопного окна, управление прямо из игрового режима,
-крупные цифры вместо мелких деталей.
+**Torrents on the Steam Deck, done properly.**
+A background Transmission daemon instead of a desktop window, control from Game Mode,
+big numbers instead of small print.
 
-**Русский** · [English](README.en.md)
+**English** · [Русский](README.ru.md)
 
 ![SteamOS](https://img.shields.io/badge/SteamOS-holo-1a9fff?style=flat-square)
 ![Decky](https://img.shields.io/badge/Decky-plugin-5ba32b?style=flat-square)
-![Установка](https://img.shields.io/badge/установка-одна_команда-e5a50a?style=flat-square)
+![Install](https://img.shields.io/badge/install-one_command-e5a50a?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-7a8894?style=flat-square)
 
-<img src="assets/preview-ru.svg" width="380" alt="Панель DeckTorrent в игровом режиме">
+<img src="assets/preview-en.svg" width="380" alt="DeckTorrent panel in Game Mode">
 
 </div>
 
 ---
 
-## Установка — одна команда
+## Install — one command
 
 ```bash
-git clone https://github.com/<вы>/DeckTorrent ~/Documents/DeckTorrent
+git clone https://github.com/<you>/DeckTorrent ~/Documents/DeckTorrent
 ~/Documents/DeckTorrent/install.sh
 ```
 
-Пароль sudo спросят один раз — только чтобы положить плагин в каталог Decky
-(он принадлежит root) и хук сна в `/etc`. Всё остальное живёт в домашнем каталоге.
-Установщик идемпотентный: повторный запуск чинит разъехавшееся и ничего не ломает.
+You are asked for the sudo password once — only to put the plugin into Decky's directory
+(owned by root) and the sleep hook into `/etc`. Everything else lives in your home directory.
+The installer is idempotent: running it again repairs whatever drifted and breaks nothing.
 
 <details>
-<summary>Что именно он делает</summary>
+<summary>What it actually does</summary>
 
-1. распаковывает Transmission 4.0.6 в `~/.local/opt/transmission` — вне `/usr`, который SteamOS перезаписывает при обновлении;
-2. настраивает `settings.json`: RPC только на localhost, папка слежения, без раздачи после закачки;
-3. поднимает пользовательский сервис и включает `linger`, чтобы закачки жили между режимами;
-4. ставит ярлыки с иконкой и делает себя обработчиком `.torrent` и `magnet:`;
-5. собирает и устанавливает плагин Decky;
-6. ставит хук сна: пауза перед сном, продолжение после;
-7. проверяет, что RPC отвечает.
+1. unpacks Transmission 4.0.6 into `~/.local/opt/transmission` — outside `/usr`, which SteamOS overwrites on every update;
+2. configures `settings.json`: RPC on localhost only, watch directory, no seeding after completion;
+3. starts the user service and enables `linger`, so downloads survive switching modes;
+4. installs desktop entries with an icon and registers itself for `.torrent` files and `magnet:` links;
+5. builds and installs the Decky plugin;
+6. installs the sleep hook: pause before suspend, resume after;
+7. verifies that RPC responds.
 
-Ключи: `--uninstall`, `--no-plugin`, `--no-sleep-hook`, `--force-binaries`.
-Каталоги переопределяются переменными: `DECKTORRENT_DOWNLOADS=/run/media/mmcblk0p1/games ./install.sh`.
+Flags: `--uninstall`, `--no-plugin`, `--no-sleep-hook`, `--force-binaries`.
+Directories are overridable: `DECKTORRENT_DOWNLOADS=/run/media/mmcblk0p1/games ./install.sh`.
 
 </details>
 
 ---
 
-## Как пользоваться
+## Usage
 
-| Где | Что |
+| Where | What |
 |---|---|
-| **Игровой режим** | «⋯» → Decky → **DeckTorrent**. **A** — пауза/продолжить, **Y** — меню: проверить файлы, найти источники, удалить |
-| **Десктоп** | ярлык **DeckTorrent** — веб-интерфейс демона на `localhost:9091` |
-| **magnet-ссылка** | открывается — сразу уходит в демон, окон не появляется |
-| **Файл .torrent** | двойной клик или положить в `~/Torrents` |
-| **Загрузки** | `~/Downloads` |
+| **Game Mode** | “⋯” → Decky → **DeckTorrent**. **A** — pause/resume, **Y** — menu: verify files, find sources, delete |
+| **Desktop** | the **DeckTorrent** shortcut — the daemon's web UI at `localhost:9091` |
+| **magnet link** | opening one hands it straight to the daemon, no windows appear |
+| **.torrent file** | double-click it, or drop it into `~/Torrents` |
+| **Downloads** | `~/Downloads` |
 
-Интерфейс плагина сам переключается между русским и английским по языку системы.
-
----
-
-## Что на экране
-
-Панель отвечает на два вопроса, которые задают на самом деле: **сколько уже скачано**
-и **когда будет готово**.
-
-- **42.7%** — крупной цифрой цвета состояния;
-- **«Осталось 1 ч 38 мин»** — прямо под полосой; на паузе там «На паузе», в конце — «Скачано»;
-- **«Скачано 19.2 ГБ из 45.0 ГБ · ещё 25.8 ГБ»** — мелким серым;
-- имя торрента — подпись сверху, а не главный герой.
-
-Пиры, рейтинг раздачи и коды состояний убраны с глаз — они в меню по кнопке **Y**.
-Полоса показывает то, что реально происходит: скачивание, проверку хеша или сбор
-метаданных магнета.
+The plugin switches between Russian and English automatically, following the system language.
 
 ---
 
-## Что настроено за вас
+## What you see
 
-**Не раздаёт после закачки** (`ratio-limit: 0`). Торрент переходит в «Скачано», отдача
-прекращается и **файлы освобождаются**: пока демон держит дескрипторы, удалённые файлы
-не возвращают место на диске.
+The panel answers the two questions people actually ask: **how much is downloaded**
+and **when will it be done**.
 
-**Закачки переживают переход между режимами.** Качает только фоновый демон, а не окно
-приложения; `linger` не даёт systemd убить его вместе с сессией.
+- **42.7%** in a large figure, coloured by state;
+- **“1 h 38 min left”** right under the bar; “Paused” when stopped, “Downloaded” when finished;
+- **“Downloaded 19.2 GB of 45.0 GB · 25.8 GB to go”** in small grey type;
+- the torrent name is a caption on top, not the main character.
 
-**RPC слушает только localhost** — наружу ничего не торчит, пароль не нужен.
+Peers, share ratio and status codes are out of sight — they live in the **Y** menu.
+The bar tracks whatever is really happening: downloading, hash checking, or fetching
+magnet metadata.
 
 ---
 
-## Из чего состоит
+## Sane defaults, already applied
 
-| Часть | Что делает |
+**No seeding after completion** (`ratio-limit: 0`). A finished torrent goes to “Downloaded”,
+uploading stops and **files are released**: while the daemon holds file descriptors, deleting
+files does not give the disk space back.
+
+**Downloads survive the Desktop ⇄ Game Mode switch.** Only the background daemon downloads,
+never an application window; `linger` keeps systemd from killing it with the session.
+
+**RPC listens on localhost only** — nothing is exposed, no password needed.
+
+---
+
+## Layout
+
+| Part | What it does |
 |---|---|
-| `install.sh` | установка и удаление одной командой |
-| `plugin/` | плагин Decky: `@decky/api` + `@decky/ui`, сборка rollup, локализация ru/en |
-| `scripts/torrent-add.sh` | обработчик `.torrent` и `magnet:` — добавляет прямо в демон |
-| `scripts/transmission-daemon.sh` | запуск фонового демона |
-| `scripts/transmission-gui.sh` | открыть веб-интерфейс демона |
-| `scripts/transmission-sleep-hook.sh` | пауза закачек перед сном, продолжение после |
-| `scripts/selftest.sh` | диагностика: демон, RPC, ассоциации, плагин, порты Decky |
-| `scripts/deploy.sh` | переустановка только плагина при разработке |
-| `docs/` | как устроен демон и как разрабатывать плагин |
+| `install.sh` | install and uninstall in one command |
+| `plugin/` | the Decky plugin: `@decky/api` + `@decky/ui`, rollup build, ru/en localisation |
+| `scripts/torrent-add.sh` | handler for `.torrent` and `magnet:` — adds straight to the daemon |
+| `scripts/transmission-daemon.sh` | start the background daemon |
+| `scripts/transmission-gui.sh` | open the daemon's web UI |
+| `scripts/transmission-sleep-hook.sh` | pause before suspend, resume after |
+| `scripts/selftest.sh` | diagnostics: daemon, RPC, associations, plugin, Decky ports |
+| `scripts/deploy.sh` | reinstall just the plugin while developing |
+| `docs/` | how the daemon is set up and how to develop the plugin (in Russian) |
 
 ---
 
-## Диагностика
+## Diagnostics
 
 ```bash
-~/Documents/DeckTorrent/scripts/selftest.sh   # ничего не меняет, sudo не нужен
+~/Documents/DeckTorrent/scripts/selftest.sh   # read-only, no sudo needed
 ```
 
 <details>
-<summary>Плагина не видно</summary>
+<summary>The plugin is nowhere to be seen</summary>
 
-Он существует **только в игровом режиме**: кнопка «⋯» → панель Decky. В Desktop Mode
-его нет и быть не может.
+It exists **only in Game Mode**: the “⋯” button → Decky panel. Desktop Mode has no such panel.
 
 ```bash
-tail ~/homebrew/logs/DeckTorrent/*.log     # «DeckTorrent запущен» = бэкенд жив
-sudo journalctl -u plugin_loader -n 50     # что сказал загрузчик
+tail ~/homebrew/logs/DeckTorrent/*.log     # “DeckTorrent запущен” = backend is alive
+sudo journalctl -u plugin_loader -n 50     # what the loader said
 ```
 
 </details>
 
 <details>
-<summary>Закачки встают при переходе в игровой режим</summary>
+<summary>Downloads stop when switching to Game Mode</summary>
 
-Значит демон умирает вместе с сессией:
+The daemon is dying with the session:
 
 ```bash
 sudo loginctl enable-linger $USER
@@ -140,33 +139,35 @@ systemctl --user restart transmission-daemon
 
 </details>
 
+See [CHANGELOG.md](CHANGELOG.md) for the release history.
+
 ---
 
-## Разработка
+## Development
 
 ```bash
 cd plugin && npm ci && npm run build
-sudo ../scripts/deploy.sh          # поставить только плагин
+sudo ../scripts/deploy.sh          # install the plugin only
 ```
 
-Подробности — в [`docs/decky-plugin-dev.md`](docs/decky-plugin-dev.md) и
-[`docs/transmission-setup.md`](docs/transmission-setup.md).
+More detail in [`docs/decky-plugin-dev.md`](docs/decky-plugin-dev.md) and
+[`docs/transmission-setup.md`](docs/transmission-setup.md) (Russian).
 
 ---
 
-## Дальше
+## Roadmap
 
-- [x] Один установщик вместо ручных шагов
-- [x] Деинсталлятор
-- [x] Русский и английский интерфейс
-- [ ] Ярлык веб-морды в библиотеке Steam
-- [ ] Обёртки для остальных бинарников (`transmission-create`, `-show`, `-cli`, `-edit`)
-- [ ] Защита от переполнения диска
+- [x] One installer instead of manual steps
+- [x] Uninstaller
+- [x] Russian and English interface
+- [ ] Web UI shortcut in the Steam library
+- [ ] Wrappers for the remaining binaries (`transmission-create`, `-show`, `-cli`, `-edit`)
+- [ ] Disk-full protection
 
 ---
 
 <div align="center">
 
-MIT · Собрано и проверено на Steam Deck, SteamOS (holo)
+MIT · Built and tested on a Steam Deck running SteamOS (holo)
 
 </div>
