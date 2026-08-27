@@ -3,6 +3,13 @@
 Формат: [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/) ·
 Версии: [SemVer](https://semver.org/lang/ru/)
 
+## [Не выпущено] / [Unreleased]
+
+### Удалено / Removed
+- Деинсталлятор забирает с собой каталоги логов Decky, включая оставшийся от
+  прежнего имени `TransmissionMonitor`.
+  *The uninstaller now removes the plugin log directories too.*
+
 ## [2.1.0] — 2026-08-19
 
 ### Добавлено / Added

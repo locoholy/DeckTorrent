@@ -18,6 +18,8 @@ APPS="$HOME/.local/share/applications"
 ICONDIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 PLUGDIR="/home/deck/homebrew/plugins/DeckTorrent"
 OLDPLUGDIR="/home/deck/homebrew/plugins/TransmissionMonitor"
+LOGDIR="/home/deck/homebrew/logs/DeckTorrent"
+OLDLOGDIR="/home/deck/homebrew/logs/TransmissionMonitor"
 DOWNLOADS="${DECKTORRENT_DOWNLOADS:-$HOME/Downloads}"
 WATCH="${DECKTORRENT_WATCH:-$HOME/Torrents}"
 MIRROR=https://steamdeck-packages.steamos.cloud/archlinux-mirror/extra-3.8/os/x86_64
@@ -92,6 +94,15 @@ if [ "$MODE" = uninstall ]; then
         ok "плагин и хук сна удалены"
     else
         warn "без sudo не убрать: sudo rm -rf $PLUGDIR /etc/systemd/system-sleep/transmission.sh"
+    fi
+
+    # Каталоги логов Decky принадлежат пользователю, sudo для них не нужен.
+    # OLDLOGDIR остался от прежнего имени плагина — его тоже за собой прибираем.
+    step "Убираю логи плагина"
+    if rm -rf "$LOGDIR" "$OLDLOGDIR" 2>/dev/null; then
+        ok "логи удалены"
+    else
+        warn "не удалось удалить: $LOGDIR $OLDLOGDIR"
     fi
 
     echo -e "\n${G}Готово.${N} Бинарники ($PFX), настройки ($CFGDIR) и сами закачки остались на месте."
