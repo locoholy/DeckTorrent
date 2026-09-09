@@ -80,6 +80,18 @@ magnet metadata.
 
 ---
 
+## Why DeckTorrent vs standard qBittorrent Flatpak?
+
+| Feature | Standard qBittorrent / KTorrent Flatpak | DeckTorrent |
+|---|---|---|
+| **Desktop ⇄ Game Mode Switch** | ❌ Downloads suspend or die when session restarts | ✅ **Persistent:** systemd user service with `linger` runs continuously in background |
+| **Game Mode UI** | ❌ Awkward desktop window added as non-Steam game; tiny UI | ✅ **Native Decky Panel:** clean handheld UI, gamepad navigation (A / Y buttons) |
+| **Sleep / Resume Safety** | ❌ Can corrupt downloads or disconnect without retry | ✅ **Automated Sleep Hooks:** pauses before sleep, safely resumes after network is up |
+| **RAM & Overhead** | ❌ Full GUI application running while playing games (~200MB+) | ✅ **Headless daemon:** lightweight Transmission 4.0.6 using ~30MB RAM |
+| **Magnet & .torrent Handling** | ❌ Manual file imports | ✅ **System-wide associations:** clicks in browser pass straight to background daemon |
+
+---
+
 ## Sane defaults, already applied
 
 **No seeding after completion** (`ratio-limit: 0`). A finished torrent goes to “Downloaded”,
